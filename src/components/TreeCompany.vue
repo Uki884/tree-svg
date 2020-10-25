@@ -61,12 +61,12 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import TreeCompany from "@/components/TreeCompany.vue";
+// import TreeCompany from "@/components/TreeCompany.vue";
 
 export default defineComponent({
-  name: "TreeCompany",
+  name: "tree-company",
   components: {
-    TreeCompany
+    TreeCompany: () => import("@/components/TreeCompany.vue")
   },
   props: {
     line1: {
