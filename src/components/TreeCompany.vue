@@ -1,23 +1,23 @@
 <template>
   <g
     v-if="tree"
-    :transform="`translate(${objectWidth},${objectHeight})`"
+    :transform="`translate(${objectWidth},${height})`"
     :id="`g-parent-${parentIndex}`"
     :ref="'parent' + parentIndex"
   >
     <svg :width="234" :height="76">
       <line
-        :x1="computeLine1.x1"
-        :y1="computeLine1.y1"
-        :x2="computeLine1.x2"
-        :y2="computeLine1.y2"
+        :x1="line1.x1"
+        :y1="line1.y1"
+        :x2="line1.x2"
+        :y2="line1.y2"
         stroke="#e74c3c"
       ></line>
       <rect
-        :width="computeRect.width"
-        :height="computeRect.height"
-        :x="computeRect.x"
-        :y="computeRect.y"
+        :width="rect.width"
+        :height="rect.height"
+        :x="rect.x"
+        :y="rect.y"
         fill="white"
         stroke="black"
       ></rect>
@@ -32,35 +32,37 @@
         {{ tree.company.name }}
       </text>
       <line
-        :x1="computeLine2.x1"
-        :y1="computeLine2.y1"
-        :x2="computeLine2.x2"
-        :y2="computeLine2.y2"
+        :x1="line2.x1"
+        :y1="line2.y1"
+        :x2="line2.x2"
+        :y2="line2.y2"
         stroke="#e74c3c"
       ></line>
     </svg>
-  </g>
-  <g
-    v-if="tree.children"
-    :ref="`children-${parentIndex}`"
-    :id="`children-${parentIndex}`"
-  >
-    <tree-company
-      v-for="(child, key, childIdx) in tree.children"
-      :key="'children' + childIdx"
-      :line1="line1"
-      :line2="line2"
-      :rect="rect"
-      :tree="child"
-      :index="childIdx++"
-      :objectWidth="objectWidth + objectWidth"
-      :objectHeight="createObjectHeight(objectHeight, childIdx)"
-    />
+    <g
+      v-if="tree.children"
+      :ref="`children-${parentIndex}-${index}`"
+      :id="`children-${parentIndex}-${index}`"
+      :transform="`translate(${objectWidth},${height})`"
+    >
+      <tree-company
+        v-for="(child, key, childIdx) in tree.children"
+        :key="'children' + childIdx"
+        :line1="line1"
+        :line2="line2"
+        :rect="rect"
+        :tree="child"
+        :index="childIdx + 1"
+        :parentIndex="parentIndex + 1"
+        :objectWidth="createObjectWidth(index, objectWidth)"
+        :objectHeight="createObjectHeight(objectHeight, childIdx)"
+      />
+    </g>
   </g>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, HtmlHTMLAttributes } from "vue";
 // import TreeCompany from "@/components/TreeCompany.vue";
 
 export default defineComponent({
@@ -99,57 +101,41 @@ export default defineComponent({
     },
     index: {
       type: Number,
-      default: null
+      default: 0
     },
     parentIndex: {
       type: Number,
-      default: null
+      default: 0
     }
   },
-  computed: {
-    computeLine1(): any {
-      const { x1, x2, y1, y2 } = this.line1;
-      return {
-        x1,
-        x2,
-        y1,
-        y2
-      };
-    },
-    computeLine2(): any {
-      const { x1, x2, y1, y2 } = this.line2;
-      return {
-        x1,
-        x2,
-        y1,
-        y2
-      };
-    },
-    computeRect(): any {
-      const { width, height, x, y } = this.rect;
-      return {
-        width,
-        height,
-        x,
-        y
-      };
-    }
+  data() {
+    return {
+      height: 0,
+      width: null
+    };
   },
   watch: {
-    tree: {
+    "tree.children": {
       deep: true,
       immediate: true,
-      handler(val) {
-        console.log(val);
+      async handler(val) {
+        await this.$nextTick(() => {
+          const parentIndex = this.parentIndex == 0 ? 0 : -1;
+          const index = this.index;
+          const prevChildren = document.getElementById(
+            `children-${parentIndex}-${index}`
+          );
+          console.log(this.parentIndex);
+          if (!prevChildren) {
+            this.height = this.objectHeight;
+            return;
+          }
+          const rect = prevChildren?.getBoundingClientRect();
+          this.height = this.objectHeight;
+        });
       }
     }
   },
-  // async mounted(){
-  //   await this.$nextTick(()=> {
-  //     console.log(this.$refs[`children-${this.index}`])
-  //     // .getBoundingClientRect()
-  //   })
-  // },
   methods: {
     createTranslate(objectWidth) {
       console.log(this.index);
@@ -157,26 +143,23 @@ export default defineComponent({
       if (this.index == 0) {
         width = objectWidth;
       } else {
-        width = objectWidth + objectWidth;
+        console.log(objectWidth);
+        width = objectWidth + 226;
       }
       return `translate(${width},0)`;
     },
+    createObjectWidth(index: number, objectWidth: number) {
+      if (index == 0) {
+        return 0;
+      }
+      const width = objectWidth + 226;
+      return width;
+    },
     createObjectHeight(height: number, index: number) {
       console.log(index, height);
-      const y = index * 100;
-      return y;
-    },
-    getParentHeight(index, objectHeight) {
-      if (index == 0 || !index) {
-        return objectHeight;
-      }
       const i = index - 1;
-      console.log(i, "発火");
-      const children = document.getElementById(`children-${i}`);
-      console.log("this", index, children);
-      const rect = children.getBoundingClientRect();
-      console.log(rect, objectHeight + rect.x);
-      return objectHeight + rect.x;
+      const y = i * 100;
+      return y;
     }
   }
 });

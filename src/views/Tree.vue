@@ -106,9 +106,25 @@ export default defineComponent({
                 company: {
                   id: 6,
                   name: "テスト6"
+                },
+                children: {
+                  11: {
+                    id: 11,
+                    company: {
+                      id: 11,
+                      name: "テスト11"
+                    }
+                  }
                 }
               },
               7: {
+                id: 7,
+                company: {
+                  id: 7,
+                  name: "テスト7"
+                }
+              },
+              8: {
                 id: 7,
                 company: {
                   id: 7,
